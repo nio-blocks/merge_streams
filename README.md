@@ -1,24 +1,52 @@
-# Block Template
+MergeStreams
+============
 
-This repository serves as a "starter" repository for creating a new block.
+Take two input streams and combine signals together
 
-## How to use
+Properties
+----------
+- expiration (timedelta) - length of time to store signal before dropping it
+- notify once (bool) - remove signal from block after it is notified
 
-### Get the block template
+Dependencies
+------------
+None
 
- 1. Fork this repository into your own block
- 1. Clone this repository and rename the folder
+Commands
+--------
+None
 
+Input
+-----
+Any list of signals to either input.
 
-### Rename the appropriate files
+Output
+------
+A new signal that is the merged version of one signal from input 1 and one signal from input 2.
 
- 1. Rename `example_block.py` to whatever your block name will be. We like to keep `_block` at the end of filenames that contain blocks.
- 1. In your new block Python file, rename the class to the new block's name. Do **not** put `Block` in the class name - this is implied.
- 1. Rename `test_example_block.py` to match your new block's class name. Always submit accompanying unit tests in the `tests` folder.
- 1. Rename `BLOCK_README.md` to `README.md` and update the documentation accordingly.
-
-
-## File Reference
-
- * **example_block.py** : This is the block code. Additional Python classes and files are definitely welcome. If the file contains a Block class, make sure the filename ends with `_block.py`. If the file represents a Base Block that is not discoverable by itself, have the filename end with `_base.py`.
- * **requirements.txt** : List out any Python dependencies this block requires. This file will be installed by pip when the block is installed. The command for installing the dependencies is `pip install -r requirements.txt`.
+- example (with no expiration and notify once is True)
+  - signal A enters input 1
+  - signal B enters input 2 - notify AB
+  - signal C enters input 1
+  - signal D enters input 1
+  - signal E enters input 2 - notify DE
+- example (with no expiration and notify once is False)
+  - signal A enters input 1
+  - signal B enters input 2 - notify AB
+  - signal C enters input 1 - notify CB
+  - signal D enters input 1 - notify DB
+  - signal E enters input 2 - notify DE
+- example (with expiration and notify once is True)
+  - signal A enters input 1
+  - signal A expires
+  - signal B enters input 2
+  - signal C enters input 1 - notify CB
+  - signal D enters input 1
+  - signal E enters input 2 - notify DE
+- example (with expiration and notify once is False)
+  - signal A enters input 1
+  - signal A expires
+  - signal B enters input 2
+  - signal C enters input 1 - notify CB
+  - signal D enters input 1 - notify DB
+  - signal E enters input 2 - notify DE
