@@ -25,7 +25,7 @@ class TestMergeStreams(NIOBlockTestCase):
         blk.process_signals([Signal({"D": "d"})], input_id='input_1')
         blk.process_signals([Signal({"E": "e"})], input_id='input_2')
 
-    def test_no_expiration_and_nofity_once_is_true(self):
+    def test_no_expiration_and_notify_once_is_true(self):
         blk = MergeStreams()
         self.configure_block(blk, {
             "expiration": {},
@@ -40,7 +40,7 @@ class TestMergeStreams(NIOBlockTestCase):
         self.assertDictEqual(self.last_notified['default'][1].to_dict(),
                              {"D": "d", "E": "e"})
 
-    def test_no_expiration_and_nofity_once_is_false(self):
+    def test_no_expiration_and_notify_once_is_false(self):
         blk = MergeStreams()
         self.configure_block(blk, {
             "expiration": {},
@@ -59,7 +59,7 @@ class TestMergeStreams(NIOBlockTestCase):
         self.assertDictEqual(self.last_notified['default'][3].to_dict(),
                              {"D": "d", "E": "e"})
 
-    def test_with_expiration_and_nofity_once_is_true(self):
+    def test_with_expiration_and_notify_once_is_true(self):
         blk = MergeStreams()
         self.configure_block(blk, {
             "expiration": {"seconds": 0.1},
@@ -74,7 +74,7 @@ class TestMergeStreams(NIOBlockTestCase):
         self.assertDictEqual(self.last_notified['default'][1].to_dict(),
                              {"D": "d", "E": "e"})
 
-    def test_with_expiration_and_nofity_once_is_false(self):
+    def test_with_expiration_and_notify_once_is_false(self):
         blk = MergeStreams()
         self.configure_block(blk, {
             "expiration": {"seconds": 0.1},
@@ -88,5 +88,5 @@ class TestMergeStreams(NIOBlockTestCase):
                              {"C": "c", "B": "b"})
         self.assertDictEqual(self.last_notified['default'][1].to_dict(),
                              {"D": "d", "B": "b"})
-        self.assertDictEqual(self.last_notified['default'][1].to_dict(),
+        self.assertDictEqual(self.last_notified['default'][2].to_dict(),
                              {"D": "d", "E": "e"})
