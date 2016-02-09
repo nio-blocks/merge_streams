@@ -22,6 +22,8 @@ class MergeStreams(Block):
         super().__init__()
         self._signal_1 = None
         self._signal_2 = None
+        self._signal_expiration_job_input_1 = None
+        self._signal_expiration_job_input_2 = None
 
     def process_signals(self, signals, input_id='default'):
         for signal in signals:
@@ -51,10 +53,22 @@ class MergeStreams(Block):
         return Signal(merged_signal)
 
     def _schedule_signal_expiration_job(self, input_id):
-        Job(self._signal_expiration_job,
-            self.expiration,
-            False,
-            input_id)
+        if input_id == "input_1":
+            if self._signal_expiration_job_input_1:
+                self._signal_expiration_job_input_1.cancel()
+            self._signal_expiration_job_input_1 = Job(
+                self._signal_expiration_job,
+                self.expiration,
+                False,
+                input_id)
+        else:
+            if self._signal_expiration_job_input_2:
+                self._signal_expiration_job_input_2.cancel()
+            self._signal_expiration_job_input_2 = Job(
+                self._signal_expiration_job,
+                self.expiration,
+                False,
+                input_id)
 
     def _signal_expiration_job(self, input_id):
         if input_id == "input_1":

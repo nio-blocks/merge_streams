@@ -1,5 +1,6 @@
 from collections import defaultdict
 from time import sleep
+from unittest.mock import MagicMock
 
 from nio.common.signal.base import Signal
 from nio.util.support.block_test_case import NIOBlockTestCase
@@ -90,3 +91,39 @@ class TestMergeStreams(NIOBlockTestCase):
                              {"D": "d", "B": "b"})
         self.assertDictEqual(self.last_notified['default'][2].to_dict(),
                              {"D": "d", "E": "e"})
+
+    def test_reset_expiration_job_on_new_signal_input_1(self):
+        """ Signal expiration job is not called if new signals come in """
+        blk = MergeStreams()
+        blk._signal_expiration_job = MagicMock()
+        self.configure_block(blk, {
+            "expiration": {"seconds": 0.1},
+            "notify_once": False
+        })
+        blk.start()
+        blk.process_signals([Signal({"A": "a"})], input_id='input_1')
+        sleep(0.05)
+        blk.process_signals([Signal({"B": "b"})], input_id='input_1')
+        sleep(0.05)
+        blk.process_signals([Signal({"C": "c"})], input_id='input_1')
+        sleep(0.05)
+        blk.stop()
+        self.assertEqual(blk._signal_expiration_job.call_count, 0)
+
+    def test_reset_expiration_job_on_new_signal_input_2(self):
+        """ Signal expiration job is not called if new signals come in """
+        blk = MergeStreams()
+        blk._signal_expiration_job = MagicMock()
+        self.configure_block(blk, {
+            "expiration": {"seconds": 0.1},
+            "notify_once": False
+        })
+        blk.start()
+        blk.process_signals([Signal({"A": "a"})], input_id='input_2')
+        sleep(0.05)
+        blk.process_signals([Signal({"B": "b"})], input_id='input_2')
+        sleep(0.05)
+        blk.process_signals([Signal({"C": "c"})], input_id='input_2')
+        sleep(0.05)
+        blk.stop()
+        self.assertEqual(blk._signal_expiration_job.call_count, 0)
