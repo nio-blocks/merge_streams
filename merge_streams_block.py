@@ -36,12 +36,29 @@ class MergeStreams(Block):
 
     def _merge_signals(self):
         """ Merge signals 1 and 2 and clear from memory if only notify once """
-        merged_signal = self._signals["input_1"].to_dict()
-        merged_signal.update(self._signals["input_2"].to_dict())
+        sig_1_dict = self._signals["input_1"].to_dict(hidden=True)
+        sig_2_dict = self._signals["input_2"].to_dict(hidden=True)
+        self._fix_to_dict_hidden_attr_bug(sig_1_dict)
+        self._fix_to_dict_hidden_attr_bug(sig_2_dict)
+        merged_signal_dict = {}
+        merged_signal_dict.update(sig_1_dict)
+        merged_signal_dict.update(sig_2_dict)
         if self.notify_once:
             self._signals["input_1"] = {}
             self._signals["input_2"] = {}
-        return Signal(merged_signal)
+        return Signal(merged_signal_dict)
+
+    def _fix_to_dict_hidden_attr_bug(self, signal_dict):
+        """ Remove special attributes from dictionary
+
+        n.io has a bug when using Signal.to_dict(hidden=True). It should
+        include private attributes (i.e. attributes starting withe '_') but not
+        special attributes (i.e. attributes starting with '__').
+
+        """
+        for key in list(signal_dict.keys()):
+            if key.startswith('__'):
+                del signal_dict[key]
 
     def _schedule_signal_expiration_job(self, input_id):
         """ Schedule expiration job, cancelling existing job first """
