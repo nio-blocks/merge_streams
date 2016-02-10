@@ -52,3 +52,4 @@ class MergeStreams(Block):
 
     def _signal_expiration_job(self, input_id):
         self._signals[input_id] = {}
+        self._signal_expiration_job[intput_id] = None
