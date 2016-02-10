@@ -10,14 +10,6 @@ from ..merge_streams_block import MergeStreams
 
 class TestMergeStreams(NIOBlockTestCase):
 
-    def setUp(self):
-        super().setUp()
-        # This will keep a list of signals notified for each output
-        self.last_notified = defaultdict(list)
-
-    def signals_notified(self, signals, output_id='default'):
-        self.last_notified[output_id].extend(signals)
-
     def process_test_signals(self, blk):
         blk.process_signals([Signal({"A": "a"})], input_id='input_1')
         sleep(0.2)
