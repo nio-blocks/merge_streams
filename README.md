@@ -50,3 +50,5 @@ A new signal that is the merged version of one signal from input 1 and one signa
   - signal C enters input 1 - notify CB
   - signal D enters input 1 - notify DB
   - signal E enters input 2 - notify DE
+
+If the signals from input_1 and input_2 share an attribute, the merged signal takes the value from input_2.
