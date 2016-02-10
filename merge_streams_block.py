@@ -23,7 +23,7 @@ class MergeStreams(Block):
         self._signals = { "input_1": {}, "input_2": {} }
         self._expiration_jobs = { "input_1": None, "input_2": None }
 
-    def process_signals(self, signals, input_id='default'):
+    def process_signals(self, signals, input_id='input_1'):
         merged_signals = []
         for signal in signals:
             self._signals[input_id] = signal

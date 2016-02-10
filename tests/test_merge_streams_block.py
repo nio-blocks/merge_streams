@@ -18,6 +18,14 @@ class TestMergeStreams(NIOBlockTestCase):
         blk.process_signals([Signal({"D": "d"})], input_id='input_1')
         blk.process_signals([Signal({"E": "e"})], input_id='input_2')
 
+    def test_default_input(self):
+        blk = MergeStreams()
+        blk.start()
+        signal = Signal({"A": "a"})
+        blk.process_signals([signal])
+        blk.stop()
+        self.assertEqual(blk._signals["input_1"], signal)
+
     def test_no_expiration_and_notify_once_is_true(self):
         blk = MergeStreams()
         self.configure_block(blk, {
