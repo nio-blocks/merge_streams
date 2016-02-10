@@ -84,6 +84,12 @@ class TestMergeStreams(NIOBlockTestCase):
         self.assertDictEqual(self.last_notified['default'][2].to_dict(),
                              {"D": "d", "E": "e"})
 
+    def test_signal_expiration_job(self):
+        blk = MergeStreams()
+        blk._signal_expiration_job('input_1')
+        self.assertDictEqual(blk._signals['input_1'], {})
+        self.assertEqual(blk._expiration_jobs['input_1'], None)
+
     def test_reset_expiration_job_on_new_signal_input_1(self):
         """ Signal expiration job is not called if new signals come in """
         blk = MergeStreams()
