@@ -24,16 +24,31 @@ class TestMergeStreams(NIOBlockTestCase):
         signal = Signal({"A": "a"})
         blk.process_signals([signal])
         blk.stop()
-        self.assertEqual(blk._signals["input_1"], signal)
+        self.assertEqual(blk._signals["null"]["input_1"], signal)
+
+    def test_group_by(self):
+        blk = MergeStreams()
+        blk.start()
+        self.configure_block(blk, {"group_by": "{{ $group }}"})
+        signal = Signal({"A": "a", "group": 1})
+        blk.process_signals([signal])
+        signal = Signal({"B": "b", "group": 2})
+        blk.process_signals([signal])
+        signal = Signal({"C": "c", "group": 1})
+        blk.process_signals([signal], input_id='input_2')
+        blk.stop()
+        self.assert_num_signals_notified(1)
+        self.assertDictEqual(self.last_notified['default'][0].to_dict(),
+                             {"A": "a", "C": "c", "group": 1})
 
     def test_merge_signals_with_duplicate_attributes(self):
         """ input_2 attributes override input_1 attributes """
         blk = MergeStreams()
         signal_1 = Signal({"A": 1})
         signal_2 = Signal({"A": 2})
-        blk._signals["input_1"] = signal_1
-        blk._signals["input_2"] = signal_2
-        merged_signal = blk._merge_signals()
+        blk._signals["null"]["input_1"] = signal_1
+        blk._signals["null"]["input_2"] = signal_2
+        merged_signal = blk._merge_signals(group="null")
         self.assertDictEqual(merged_signal.to_dict(), signal_2.to_dict())
 
     def test_no_expiration_and_notify_once_is_true(self):
@@ -104,9 +119,9 @@ class TestMergeStreams(NIOBlockTestCase):
 
     def test_signal_expiration_job(self):
         blk = MergeStreams()
-        blk._signal_expiration_job('input_1')
-        self.assertDictEqual(blk._signals['input_1'], {})
-        self.assertEqual(blk._expiration_jobs['input_1'], None)
+        blk._signal_expiration_job("null", "input_1")
+        self.assertDictEqual(blk._signals["null"]["input_1"], {})
+        self.assertEqual(blk._expiration_jobs["null"]["input_1"], None)
 
     def test_reset_expiration_job_on_new_signal_input_1(self):
         """ Signal expiration job is not called if new signals come in """
