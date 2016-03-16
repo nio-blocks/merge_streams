@@ -17,7 +17,7 @@ class MergeStreams(GroupBy, Block):
 
     """ Take two input streams and combine signals together. """
 
-    expiration = TimeDeltaProperty(default={})
+    ttl = TimeDeltaProperty(default={})
     notify_once = BoolProperty(default=True)
     version = VersionProperty('0.1.0')
 
@@ -39,7 +39,7 @@ class MergeStreams(GroupBy, Block):
             if self._signals[group]["input_1"] and \
                     self._signals[group]["input_2"]:
                 merged_signals.append(self._merge_signals(group))
-        if self.expiration():
+        if self.ttl():
             self._schedule_signal_expiration_job(group, input_id)
         return merged_signals
 
@@ -74,7 +74,7 @@ class MergeStreams(GroupBy, Block):
         if self._expiration_jobs[group][input_id]:
             self._expiration_jobs[group][input_id].cancel()
         self._expiration_jobs[group][input_id] = Job(
-            self._signal_expiration_job, self.expiration(), False,
+            self._signal_expiration_job, self.ttl(), False,
             group, input_id)
 
     def _signal_expiration_job(self, group, input_id):

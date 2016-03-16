@@ -14,17 +14,28 @@ class MergeDynamicStreams(GroupBy, Block):
 
     """ Merge a dynamic number of streams and combine signals together. """
 
-    expiration = TimeDeltaProperty(default={})
-    version = VersionProperty('0.1.0')
+    ttl = TimeDeltaProperty(default={})
+    notify_once = BoolProperty(default=True)
     stream = Property(name="Stream", default=None, allow_none=True)
+    version = VersionProperty('0.1.0')
 
     def __init__(self):
         super().__init__()
-        self._signals = defaultdict(lambda: defaultdict(Signal))
-        self._expiration_jobs = defaultdict(lambda: defaultdict(None))
+        # Keep track of the last signal for each stream in each group.
+        # Signals are removed from here when ttl expires.
+        # Stream names are never removed.
+        self._last_signal = defaultdict(lambda: defaultdict(lambda: None))
+        # Keep track of the last signal for each stream in each group.
+        # Signals are removed from here when ttl expires and when notified and
+        # notify_once is True. Stream names are never removed.
+        self._signals = defaultdict(lambda: defaultdict(lambda: None))
+        # Store jobs that remove signals after ttl.
+        self._expiration_jobs = defaultdict(lambda: defaultdict(lambda: None))
 
     def process_group_signals(self, signals, group, input_id):
+        """Return the merged signals to be notified for this group"""
         output_signals = []
+        # Group signals into streams and then process each one at a time
         streams = defaultdict(list)
         for signal in signals:
             streams[self.stream(signal)].append(signal)
@@ -34,27 +45,46 @@ class MergeDynamicStreams(GroupBy, Block):
         return output_signals
 
     def process_stream_signals(self, signals, group, stream):
+        """Return the merged signals to be notified for this stream"""
         merged_signals = []
         for signal in signals:
+            new_stream = False
+            if stream not in self._last_signal[group]:
+                # Trigger merge streams if this is a new one
+                new_stream = True
             # Save new signal
             self._signals[group][stream] = signal
-            # Merge all signals for this group
-            merged_signals.append(self._merge_signals(group))
-        if self.expiration():
+            self._last_signal[group][stream] = signal
+            # Merge all streams for this group
+            merged_signals.extend(self._merge_streams(group, new_stream))
+        if self.ttl():
             self._schedule_signal_expiration_job(group, stream)
         return merged_signals
 
-    def _merge_signals(self, group):
-        """ Merge signals 1 and 2 and clear from memory if only notify once """
-        merged_signal_dict = {}
-        for stream in self._signals[group]:
-            signal_dict = self._signals[group][stream].to_dict()
-            self._fix_to_dict_hidden_attr_bug(signal_dict)
-            merged_signal_dict.update(signal_dict)
-        return Signal(merged_signal_dict)
+    def _merge_streams(self, group, new_stream):
+        """Merge signals from each stream and clear if notify once."""
+        if new_stream and self.notify_once():
+            # Use last signal signal even if it was already notified
+            streams = self._last_signal[group]
+        else:
+            # Otherwise use only the signals still available
+            streams = self._signals[group]
+        if not [streams[s] for s in streams if streams[s] is None]:
+            # Only merge streams if we have a signal for every stream
+            merged_signal_dict = {}
+            for stream in streams:
+                signal_dict = streams[stream].to_dict()
+                self._fix_to_dict_hidden_attr_bug(signal_dict)
+                merged_signal_dict.update(signal_dict)
+                # Clear signal from memory if only notifying once
+                if self.notify_once():
+                    self._signals[group][stream] = None
+            return [Signal(merged_signal_dict)]
+        else:
+            return []
 
     def _fix_to_dict_hidden_attr_bug(self, signal_dict):
-        """ Remove special attributes from dictionary
+        """Remove special attributes from dictionary.
 
         n.io has a bug when using Signal.to_dict(hidden=True). It should
         include private attributes (i.e. attributes starting withe '_') but not
@@ -67,12 +97,13 @@ class MergeDynamicStreams(GroupBy, Block):
 
     def _schedule_signal_expiration_job(self, group, stream):
         """ Schedule expiration job, cancelling existing job first """
-        if self._expiration_jobs[group].get(stream):
+        if self._expiration_jobs[group][stream]:
             self._expiration_jobs[group][stream].cancel()
         self._expiration_jobs[group][stream] = Job(
-            self._signal_expiration_job, self.expiration(), False,
+            self._signal_expiration_job, self.ttl(), False,
             group, stream)
 
     def _signal_expiration_job(self, group, stream):
-        del self._signals[group][stream]
-        del self._expiration_jobs[group][stream]
+        self._last_signal[group][stream] = None
+        self._signals[group][stream] = None
+        self._expiration_jobs[group][stream] = None
