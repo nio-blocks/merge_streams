@@ -14,9 +14,9 @@ class MergeDynamicStreams(GroupBy, Block):
 
     """ Merge a dynamic number of streams and combine signals together. """
 
-    ttl = TimeDeltaProperty(default={})
-    notify_once = BoolProperty(default=True)
-    stream = Property(name="Stream", default=None, allow_none=True)
+    ttl = TimeDeltaProperty(default={}, title="Time to Live")
+    notify_once = BoolProperty(default=True, title="Notify Once")
+    stream = Property(title="Stream Name", default=None, allow_none=True)
     version = VersionProperty('0.1.0')
 
     def __init__(self):
