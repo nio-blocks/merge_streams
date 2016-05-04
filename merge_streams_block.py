@@ -17,8 +17,8 @@ class MergeStreams(GroupBy, Block):
 
     """ Take two input streams and combine signals together. """
 
-    ttl = TimeDeltaProperty(default={})
-    notify_once = BoolProperty(default=True)
+    ttl = TimeDeltaProperty(default={}, title="Time to Live")
+    notify_once = BoolProperty(default=True, title="Notify Once")
     version = VersionProperty('0.1.0')
 
     def _default_signals_dict(self):
