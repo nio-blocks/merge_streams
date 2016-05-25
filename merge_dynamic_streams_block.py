@@ -35,13 +35,10 @@ class MergeDynamicStreams(GroupBy, Block):
     def process_group_signals(self, signals, group, input_id):
         """Return the merged signals to be notified for this group"""
         output_signals = []
-        # Group signals into streams and then process each one at a time
-        streams = defaultdict(list)
         for signal in signals:
-            streams[self.stream(signal)].append(signal)
-        for stream in streams:
+            stream = self.stream(signal)
             output_signals.extend(
-                self.process_stream_signals(streams[stream], group, stream))
+                self.process_stream_signals([signal], group, stream))
         return output_signals
 
     def process_stream_signals(self, signals, group, stream):

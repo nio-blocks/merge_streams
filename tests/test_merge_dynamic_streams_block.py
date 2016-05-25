@@ -227,3 +227,27 @@ class TestMergeDynamicStreams(NIOBlockTestCase):
         sleep(0.05)
         blk.stop()
         self.assertEqual(blk._signal_expiration_job.call_count, 0)
+
+    def test_process_multiple_signals(self):
+        """ Check that signals processed as a list are done in order """
+        blk = MergeDynamicStreams()
+        blk._signal_expiration_job = MagicMock()
+        self.configure_block(blk, {
+            "stream": "{{ $stream }}",
+        })
+        blk.start()
+        blk.process_signals([Signal({"A": "a", "stream": 1}),
+                             Signal({"B": "b", "stream": 2}),
+                             Signal({"C": "c", "stream": 1}),
+                             Signal({"D": "d", "stream": 2})])
+        blk.stop()
+        self.assertEqual(3, len(self.last_notified[DEFAULT_TERMINAL]))
+        self.assert_merged_signal_equal(
+            self.last_notified[DEFAULT_TERMINAL][0].to_dict(),
+            {"A": "a"})
+        self.assert_merged_signal_equal(
+            self.last_notified[DEFAULT_TERMINAL][1].to_dict(),
+            {"A": "a", "B": "b"})
+        self.assert_merged_signal_equal(
+            self.last_notified[DEFAULT_TERMINAL][2].to_dict(),
+            {"C": "c", "D": "d"})
