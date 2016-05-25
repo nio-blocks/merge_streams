@@ -41,8 +41,19 @@ class MergeDynamicStreams(GroupBy, Block):
                 self.process_stream_signals([signal], group, stream))
         return output_signals
 
-    def process_stream_signals(self, signals, group, stream):
-        """Return the merged signals to be notified for this stream"""
+    def process_stream_signals(
+            self, signals, group, stream):
+        """Return the merged signals to be notified for this stream
+
+        Process the new *signals* for the given *group* and *stream*. Merges
+        all streams together and returns the merged signals if all streams are
+        ready.
+
+        Signals are removed from memory after merge if notify_once is True.
+
+        Signals are removed from memory after ttl has expored.
+
+        """
         merged_signals = []
         for signal in signals:
             new_stream = False
@@ -59,9 +70,18 @@ class MergeDynamicStreams(GroupBy, Block):
         return merged_signals
 
     def _merge_streams(self, group, new_stream):
-        """Merge signals from each stream and clear if notify once."""
+        """Merge and return signals from each stream for the given group
+
+        Streams are only merged if we have a signal for every known stream.
+        When *notify_once* is True, we need a new signal for every stream
+        before the streams are merged and notified again. The exception to this
+        is if we are adding a *new_stream*. In this case, we want to merge all
+        streams with last last signal of that stream, even if it has already
+        been merged and notified.
+
+        """
         if new_stream and self.notify_once():
-            # Use last signal signal even if it was already notified
+            # Use last signal even if it was already notified
             streams = self._last_signal[group]
         else:
             # Otherwise use only the signals still available
