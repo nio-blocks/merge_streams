@@ -43,20 +43,10 @@ class TestMergeStreams(NIOBlockTestCase):
         self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][0].to_dict(),
                              {"A": "a", "C": "c", "group": 1})
 
-    def test_merge_signals_with_duplicate_attributes(self):
-        """ input_2 attributes override input_1 attributes """
-        blk = MergeStreams()
-        signal_1 = Signal({"A": 1})
-        signal_2 = Signal({"A": 2})
-        blk._signals[None]["input_1"] = signal_1
-        blk._signals[None]["input_2"] = signal_2
-        merged_signal = blk._merge_signals(group=None)
-        self.assertDictEqual(merged_signal.to_dict(), signal_2.to_dict())
-
-    def test_no_expiration_and_notify_once_is_true(self):
+    def test_no_ttl_and_notify_once_is_true(self):
         blk = MergeStreams()
         self.configure_block(blk, {
-            "expiration": {},
+            "ttil": {},
             "notify_once": True
         })
         blk.start()
@@ -68,10 +58,10 @@ class TestMergeStreams(NIOBlockTestCase):
         self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][1].to_dict(),
                              {"D": "d", "E": "e"})
 
-    def test_no_expiration_and_notify_once_is_false(self):
+    def test_no_ttl_and_notify_once_is_false(self):
         blk = MergeStreams()
         self.configure_block(blk, {
-            "expiration": {},
+            "ttl": {},
             "notify_once": False
         })
         blk.start()
@@ -87,10 +77,10 @@ class TestMergeStreams(NIOBlockTestCase):
         self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][3].to_dict(),
                              {"D": "d", "E": "e"})
 
-    def test_with_expiration_and_notify_once_is_true(self):
+    def test_with_ttl_and_notify_once_is_true(self):
         blk = MergeStreams()
         self.configure_block(blk, {
-            "expiration": {"seconds": 0.1},
+            "ttl": {"seconds": 0.1},
             "notify_once": True
         })
         blk.start()
@@ -102,10 +92,10 @@ class TestMergeStreams(NIOBlockTestCase):
         self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][1].to_dict(),
                              {"D": "d", "E": "e"})
 
-    def test_with_expiration_and_notify_once_is_false(self):
+    def test_with_ttl_and_notify_once_is_false(self):
         blk = MergeStreams()
         self.configure_block(blk, {
-            "expiration": {"seconds": 0.1},
+            "ttl": {"seconds": 0.1},
             "notify_once": False
         })
         blk.start()
@@ -119,18 +109,12 @@ class TestMergeStreams(NIOBlockTestCase):
         self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][2].to_dict(),
                              {"D": "d", "E": "e"})
 
-    def test_signal_expiration_job(self):
-        blk = MergeStreams()
-        blk._signal_expiration_job("null", "input_1")
-        self.assertDictEqual(blk._signals["null"]["input_1"], {})
-        self.assertEqual(blk._expiration_jobs["null"]["input_1"], None)
-
     def test_reset_expiration_job_on_new_signal_input_1(self):
         """ Signal expiration job is not called if new signals come in """
         blk = MergeStreams()
         blk._signal_expiration_job = MagicMock()
         self.configure_block(blk, {
-            "expiration": {"seconds": 0.1},
+            "ttl": {"seconds": 0.1},
             "notify_once": False
         })
         blk.start()
@@ -148,7 +132,7 @@ class TestMergeStreams(NIOBlockTestCase):
         blk = MergeStreams()
         blk._signal_expiration_job = MagicMock()
         self.configure_block(blk, {
-            "expiration": {"seconds": 0.1},
+            "ttl": {"seconds": 0.1},
             "notify_once": False
         })
         blk.start()
