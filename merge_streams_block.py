@@ -33,6 +33,13 @@ class MergeStreams(Persistence, GroupBy, Block):
         self._expiration_jobs = defaultdict(self._default_expiration_jobs_dict)
 
     def persisted_values(self):
+        """Persist signals only when no expiration (ttl) is configured.
+
+        Signals at each input will be persisted between block restarts except
+        when an expiration is configured. TODO: Improve this feature so signals
+        are always persisted and then properly removed after loaded and the
+        expiration has passed.
+        """
         if self.expiration():
             return []
         else:
