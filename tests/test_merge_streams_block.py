@@ -160,3 +160,25 @@ class TestMergeStreams(NIOBlockTestCase):
         sleep(0.05)
         blk.stop()
         self.assertEqual(blk._signal_expiration_job.call_count, 0)
+
+    def test_persisted_values_with_no_ttl(self):
+        """Persist input signals between block restarts"""
+        blk = MergeStreams()
+        # Signals are loaded from persistence
+        self.configure_block(blk, {})
+        self.assertEqual(blk.persisted_values(), ["_signals"])
+        blk.start()
+        # Signals are saved to persistence
+        self.assertEqual(blk.persisted_values(), ["_signals"])
+        blk.stop()
+
+    def test_persisted_values_with_ttl(self):
+        """Do no persist input signals when there is an expiration"""
+        blk = MergeStreams()
+        # Signals are not loaded from persistence
+        self.configure_block(blk, {"expiration": {"seconds": 1}})
+        self.assertEqual(blk.persisted_values(), [])
+        blk.start()
+        # Signals are not saved to persistence
+        self.assertEqual(blk.persisted_values(), [])
+        blk.stop()

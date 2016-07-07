@@ -6,14 +6,14 @@ from nio.signal.base import Signal
 from nio.properties import VersionProperty, TimeDeltaProperty, \
     BoolProperty
 from nio.modules.scheduler import Job
-
 from nio.block.mixins.group_by.group_by import GroupBy
+from nio.block.mixins.persistence.persistence import Persistence
 
 
 @input('input_2')
 @input('input_1', default=True)
 @discoverable
-class MergeStreams(GroupBy, Block):
+class MergeStreams(Persistence, GroupBy, Block):
 
     """ Take two input streams and combine signals together. """
 
@@ -31,6 +31,12 @@ class MergeStreams(GroupBy, Block):
         super().__init__()
         self._signals = defaultdict(self._default_signals_dict)
         self._expiration_jobs = defaultdict(self._default_expiration_jobs_dict)
+
+    def persisted_values(self):
+        if self.expiration():
+            return []
+        else:
+            return ["_signals"]
 
     def process_group_signals(self, signals, group, input_id):
         merged_signals = []
