@@ -1,11 +1,9 @@
 from collections import defaultdict
 from time import sleep
-from unittest.mock import MagicMock
-
+from unittest.mock import MagicMock, patch
 from nio.block.terminals import DEFAULT_TERMINAL
 from nio.signal.base import Signal
 from nio.testing.block_test_case import NIOBlockTestCase
-
 from ..merge_streams_block import MergeStreams
 
 
@@ -163,22 +161,28 @@ class TestMergeStreams(NIOBlockTestCase):
 
     def test_persisted_values_with_no_ttl(self):
         """Persist input signals between block restarts"""
-        blk = MergeStreams()
-        # Signals are loaded from persistence
-        self.configure_block(blk, {})
-        self.assertEqual(blk.persisted_values(), ["_signals"])
-        blk.start()
-        # Signals are saved to persistence
-        self.assertEqual(blk.persisted_values(), ["_signals"])
-        blk.stop()
+        persistence_module_path = \
+            'nio.block.mixins.persistence.persistence.PersistenceModule'
+        with patch(persistence_module_path) as mock_persistence:
+            blk = MergeStreams()
+            self.configure_block(blk, {})
+            self.assertEqual(
+                mock_persistence().load.call_args[0][0], "_signals")
+            blk.start()
+            blk.stop()
+            self.assertEqual(
+                mock_persistence().store.call_args[0][0], "_signals")
+            self.assertEqual(mock_persistence().save.call_count, 1)
 
     def test_persisted_values_with_ttl(self):
         """Do no persist input signals when there is an expiration"""
-        blk = MergeStreams()
-        # Signals are not loaded from persistence
-        self.configure_block(blk, {"expiration": {"seconds": 1}})
-        self.assertEqual(blk.persisted_values(), [])
-        blk.start()
-        # Signals are not saved to persistence
-        self.assertEqual(blk.persisted_values(), [])
-        blk.stop()
+        persistence_module_path = \
+            'nio.block.mixins.persistence.persistence.PersistenceModule'
+        with patch(persistence_module_path) as mock_persistence:
+            blk = MergeStreams()
+            self.configure_block(blk, {"expiration": {"seconds": 1}})
+            self.assertFalse(mock_persistence().load.call_count)
+            blk.start()
+            blk.stop()
+            self.assertFalse(mock_persistence().store.call_count)
+            self.assertTrue(mock_persistence().save.call_count)
