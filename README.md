@@ -17,6 +17,13 @@ Commands
 --------
 None
 
+Persistence
+-----------
+
+Persist signals only when no expiration (ttl) is configured.
+
+Signals at each input will be persisted between block restarts except when an expiration is configured. TODO: Improve this feature so signals are always persisted and then properly removed after loaded and the expiration has passed.
+
 Input
 -----
 Any list of signals to either input.
