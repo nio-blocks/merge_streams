@@ -186,3 +186,40 @@ class TestMergeStreams(NIOBlockTestCase):
             blk.stop()
             self.assertFalse(mock_persistence().store.call_count)
             self.assertTrue(mock_persistence().save.call_count)
+
+    def test_recursive_case(self):
+        """ Two signals with dictionary values recursively merge together"""
+        blk = MergeStreams()
+        blk._signal_expiration_job = MagicMock()
+        self.configure_block(blk, {
+            "expiration": {"seconds": 0.1},
+            "notify_once": False
+        })
+
+        blk.start()
+        blk.process_signals([Signal({"key": {"inner_key_1": 1}})],
+                            input_id="input_1")
+        blk.process_signals([Signal({"key": {"inner_key_2": 2}})],
+                            input_id="input_2")
+        blk.stop()
+        self.assert_num_signals_notified(1)
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][0].to_dict(),
+                             {"key": {"inner_key_1": 1, "inner_key_2": 2}})
+
+    def test_recursive_multiple_attributes(self):
+        """ Test sending in signals with multiple attributes """
+        blk = MergeStreams()
+        blk._signal_expiration_job = MagicMock()
+        self.configure_block(blk, {
+            "expiration": {"seconds": 0.1},
+            "notify_once": False
+        })
+        blk.start()
+        blk.process_signals([Signal({"key": {"inner_key_1": 1},
+                                     "key_2": {"inner_key_3": 3}})],
+                                     input_id="input_1")
+        blk.process_signals([Signal({"key": {"inner_key_2": 2}})],
+                            input_id="input_2")
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][0].to_dict(),
+                             {"key": {"inner_key_1": 1, "inner_key_2": 2},
+                              "key_2": {"inner_key_3": 3}})
