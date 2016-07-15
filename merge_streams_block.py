@@ -57,24 +57,16 @@ class MergeStreams(Persistence, GroupBy, Block):
         if merged_signals:
             self.notify_signals(merged_signals)
 
-    def _helper_merge_signals(self, sig_1_dict, sig_2_dict):
+    def _recursive_merge_signals(self, sig_1_dict, sig_2_dict):
         ''' Recurively merge the signals passed into _merge_signals() '''
-        dict1_key = list(sig_1_dict.keys())[0]
-        dict2_key = list(sig_2_dict.keys())[0]
+        for key, value in sig_1_dict.items():
+            if isinstance(value, dict):
+                node = sig_2_dict.setdefault(key, {})
+                self._recursive_merge_signals(value, node)
+            else:
+                sig_2_dict[key] = value
 
-        merged_signal_dict = {}
-
-        # Base Case: Both signals have different keys and/or at least one of the values is not a dictionary
-        if dict1_key != dict2_key or type(sig_1_dict[dict1_key]) != dict or type(sig_2_dict[dict2_key]) != dict:
-            merged_signal_dict.update(sig_1_dict)
-            merged_signal_dict.update(sig_2_dict)
-
-        # Recursive Case: Both signals have the same key and
-        # both entries are dictionaries
-        else:
-            merged_signal_dict[dict1_key] = self._helper_merge_signals(sig_1_dict[dict1_key], sig_2_dict[dict2_key])
-
-        return merged_signal_dict
+        return sig_2_dict
 
     def _merge_signals(self, group):
         """ Merge signals 1 and 2 and clear from memory if only notify once """
@@ -83,11 +75,14 @@ class MergeStreams(Persistence, GroupBy, Block):
         self._fix_to_dict_hidden_attr_bug(sig_1_dict)
         self._fix_to_dict_hidden_attr_bug(sig_2_dict)
 
-        merged_signal_dict = self._helper_merge_signals(sig_1_dict, sig_2_dict)
+        merged_signal_dict = {}
+        # Recursively merge dictionaries
+        merged_signal_dict.update(self._recursive_merge_signals(sig_2_dict, sig_1_dict))
         
         if self.notify_once():
             self._signals[group]["input_1"] = {}
             self._signals[group]["input_2"] = {}
+        # Convert dictionary to Signal
         return Signal(merged_signal_dict)
 
     def _fix_to_dict_hidden_attr_bug(self, signal_dict):
