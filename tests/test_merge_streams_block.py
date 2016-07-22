@@ -223,3 +223,24 @@ class TestMergeStreams(NIOBlockTestCase):
         self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][0].to_dict(),
                              {"key": {"inner_key_1": 1, "inner_key_2": 2},
                               "key_2": {"inner_key_3": 3}})
+
+    def test_recursive_merge_with_multiple_notifications(self):
+        """Recursive merge should not affect repeat notifications"""
+        blk = MergeStreams()
+        blk._signal_expiration_job = MagicMock()
+        self.configure_block(blk, {
+            "expiration": {"seconds": 0.1},
+            "notify_once": False
+        })
+        blk.start()
+        blk.process_signals([Signal({"key": {"inner_key_1": {"a": "A"}}})],
+                            input_id="input_1")
+        blk.process_signals([Signal({"key": {"inner_key_1": {"b": "B"}}})],
+                            input_id="input_2")
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][0].to_dict(),
+                             {"key": {"inner_key_1": {"a": "A", "b": "B"}}})
+        # Now make sure that a new input_2 signal is merged with input_1
+        blk.process_signals([Signal({"key": {"inner_key_1": {"c": "C"}}})],
+                            input_id="input_2")
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][1].to_dict(),
+                             {"key": {"inner_key_1": {"a": "A", "c": "C"}}})
