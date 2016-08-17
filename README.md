@@ -5,9 +5,9 @@ Take two input streams and combine signals together
 
 Properties
 ----------
-- expiration (timedelta) - length of time to store signal before dropping it
-- notify once (bool) - remove signal from block after it is notified
-- group_by (str) - signals from the two inputs are merged by group
+- **expiration** (timedelta) - length of time to store signal before dropping it
+- **notify_once** (bool) - remove signal from block after it is notified
+- **group_by** (str) - signals from the two inputs are merged by group
 
 Dependencies
 ------------
