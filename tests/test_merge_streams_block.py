@@ -1,10 +1,9 @@
 from collections import defaultdict
 from time import sleep
-from unittest.mock import MagicMock
-
-from nio.common.signal.base import Signal
-from nio.util.support.block_test_case import NIOBlockTestCase
-
+from unittest.mock import MagicMock, patch
+from nio.block.terminals import DEFAULT_TERMINAL
+from nio.signal.base import Signal
+from nio.testing.block_test_case import NIOBlockTestCase
 from ..merge_streams_block import MergeStreams
 
 
@@ -21,24 +20,25 @@ class TestMergeStreams(NIOBlockTestCase):
     def test_default_input(self):
         blk = MergeStreams()
         blk.start()
+        self.configure_block(blk, {})
         signal = Signal({"A": "a"})
-        blk.process_signals([signal])
+        blk.process_signals([signal], input_id='input_1')
         blk.stop()
-        self.assertEqual(blk._signals["null"]["input_1"], signal)
+        self.assertEqual(blk._signals[None]["input_1"], signal)
 
     def test_group_by(self):
         blk = MergeStreams()
         blk.start()
         self.configure_block(blk, {"group_by": "{{ $group }}"})
         signal = Signal({"A": "a", "group": 1})
-        blk.process_signals([signal])
+        blk.process_signals([signal], input_id='input_1')
         signal = Signal({"B": "b", "group": 2})
-        blk.process_signals([signal])
+        blk.process_signals([signal], input_id='input_1')
         signal = Signal({"C": "c", "group": 1})
         blk.process_signals([signal], input_id='input_2')
         blk.stop()
         self.assert_num_signals_notified(1)
-        self.assertDictEqual(self.last_notified['default'][0].to_dict(),
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][0].to_dict(),
                              {"A": "a", "C": "c", "group": 1})
 
     def test_merge_signals_with_duplicate_attributes(self):
@@ -46,9 +46,9 @@ class TestMergeStreams(NIOBlockTestCase):
         blk = MergeStreams()
         signal_1 = Signal({"A": 1})
         signal_2 = Signal({"A": 2})
-        blk._signals["null"]["input_1"] = signal_1
-        blk._signals["null"]["input_2"] = signal_2
-        merged_signal = blk._merge_signals(group="null")
+        blk._signals[None]["input_1"] = signal_1
+        blk._signals[None]["input_2"] = signal_2
+        merged_signal = blk._merge_signals(group=None)
         self.assertDictEqual(merged_signal.to_dict(), signal_2.to_dict())
 
     def test_no_expiration_and_notify_once_is_true(self):
@@ -61,9 +61,9 @@ class TestMergeStreams(NIOBlockTestCase):
         self.process_test_signals(blk)
         blk.stop()
         self.assert_num_signals_notified(2)
-        self.assertDictEqual(self.last_notified['default'][0].to_dict(),
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][0].to_dict(),
                              {"A": "a", "B": "b"})
-        self.assertDictEqual(self.last_notified['default'][1].to_dict(),
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][1].to_dict(),
                              {"D": "d", "E": "e"})
 
     def test_no_expiration_and_notify_once_is_false(self):
@@ -76,13 +76,13 @@ class TestMergeStreams(NIOBlockTestCase):
         self.process_test_signals(blk)
         blk.stop()
         self.assert_num_signals_notified(4)
-        self.assertDictEqual(self.last_notified['default'][0].to_dict(),
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][0].to_dict(),
                              {"A": "a", "B": "b"})
-        self.assertDictEqual(self.last_notified['default'][1].to_dict(),
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][1].to_dict(),
                              {"C": "c", "B": "b"})
-        self.assertDictEqual(self.last_notified['default'][2].to_dict(),
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][2].to_dict(),
                              {"D": "d", "B": "b"})
-        self.assertDictEqual(self.last_notified['default'][3].to_dict(),
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][3].to_dict(),
                              {"D": "d", "E": "e"})
 
     def test_with_expiration_and_notify_once_is_true(self):
@@ -95,9 +95,9 @@ class TestMergeStreams(NIOBlockTestCase):
         self.process_test_signals(blk)
         blk.stop()
         self.assert_num_signals_notified(2)
-        self.assertDictEqual(self.last_notified['default'][0].to_dict(),
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][0].to_dict(),
                              {"C": "c", "B": "b"})
-        self.assertDictEqual(self.last_notified['default'][1].to_dict(),
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][1].to_dict(),
                              {"D": "d", "E": "e"})
 
     def test_with_expiration_and_notify_once_is_false(self):
@@ -110,11 +110,11 @@ class TestMergeStreams(NIOBlockTestCase):
         self.process_test_signals(blk)
         blk.stop()
         self.assert_num_signals_notified(3)
-        self.assertDictEqual(self.last_notified['default'][0].to_dict(),
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][0].to_dict(),
                              {"C": "c", "B": "b"})
-        self.assertDictEqual(self.last_notified['default'][1].to_dict(),
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][1].to_dict(),
                              {"D": "d", "B": "b"})
-        self.assertDictEqual(self.last_notified['default'][2].to_dict(),
+        self.assertDictEqual(self.last_notified[DEFAULT_TERMINAL][2].to_dict(),
                              {"D": "d", "E": "e"})
 
     def test_signal_expiration_job(self):
@@ -158,3 +158,31 @@ class TestMergeStreams(NIOBlockTestCase):
         sleep(0.05)
         blk.stop()
         self.assertEqual(blk._signal_expiration_job.call_count, 0)
+
+    def test_persisted_values_with_no_ttl(self):
+        """Persist input signals between block restarts"""
+        persistence_module_path = \
+            'nio.block.mixins.persistence.persistence.PersistenceModule'
+        with patch(persistence_module_path) as mock_persistence:
+            blk = MergeStreams()
+            self.configure_block(blk, {})
+            self.assertEqual(
+                mock_persistence().load.call_args[0][0], "_signals")
+            blk.start()
+            blk.stop()
+            self.assertEqual(
+                mock_persistence().store.call_args[0][0], "_signals")
+            self.assertEqual(mock_persistence().save.call_count, 1)
+
+    def test_persisted_values_with_ttl(self):
+        """Do no persist input signals when there is an expiration"""
+        persistence_module_path = \
+            'nio.block.mixins.persistence.persistence.PersistenceModule'
+        with patch(persistence_module_path) as mock_persistence:
+            blk = MergeStreams()
+            self.configure_block(blk, {"expiration": {"seconds": 1}})
+            self.assertFalse(mock_persistence().load.call_count)
+            blk.start()
+            blk.stop()
+            self.assertFalse(mock_persistence().store.call_count)
+            self.assertTrue(mock_persistence().save.call_count)
