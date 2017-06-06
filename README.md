@@ -5,9 +5,9 @@ Take two input streams and combine signals together
 
 Properties
 ----------
-- **expiration** (timedelta) - length of time to store signal before dropping it
-- **notify_once** (bool) - remove signal from block after it is notified
-- **group_by** (str) - signals from the two inputs are merged by group
+- **expiration** (type:timedelta): length of time to store signal before dropping it
+- **notify_once** (type:bool): remove signal from block after it is notified
+- **group_by** (type:string): signals from the two inputs are merged by group
 
 Dependencies
 ------------
@@ -16,13 +16,6 @@ None
 Commands
 --------
 None
-
-Persistence
------------
-
-Persist signals only when no expiration (ttl) is configured.
-
-Signals at each input will be persisted between block restarts except when an expiration is configured. TODO: Improve this feature so signals are always persisted and then properly removed after loaded and the expiration has passed.
 
 Input
 -----
@@ -60,3 +53,8 @@ A new signal that is the merged version of one signal from input 1 and one signa
   - signal E enters input 2 - notify DE
 
 If the signals from input_1 and input_2 share an attribute, the merged signal takes the value from input_2.
+
+Persistence
+-----------
+Persist signals only when no expiration (ttl) is configured.
+Signals at each input will be persisted between block restarts except when an expiration is configured. TODO: Improve this feature so signals are always persisted and then properly removed after loaded and the expiration has passed.
