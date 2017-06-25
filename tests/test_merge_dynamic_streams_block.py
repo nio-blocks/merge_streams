@@ -241,13 +241,7 @@ class TestMergeDynamicStreams(NIOBlockTestCase):
                              Signal({"C": "c", "stream": 1}),
                              Signal({"D": "d", "stream": 2})])
         blk.stop()
-        self.assertEqual(3, len(self.last_notified[DEFAULT_TERMINAL]))
+        self.assertEqual(1, len(self.last_notified[DEFAULT_TERMINAL]))
         self.assert_merged_signal_equal(
             self.last_notified[DEFAULT_TERMINAL][0].to_dict(),
-            {"A": "a"})
-        self.assert_merged_signal_equal(
-            self.last_notified[DEFAULT_TERMINAL][1].to_dict(),
-            {"A": "a", "B": "b"})
-        self.assert_merged_signal_equal(
-            self.last_notified[DEFAULT_TERMINAL][2].to_dict(),
             {"C": "c", "D": "d"})

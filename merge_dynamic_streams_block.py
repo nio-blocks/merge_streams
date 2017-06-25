@@ -37,8 +37,8 @@ class MergeDynamicStreams(GroupBy, Block):
         output_signals = []
         for signal in signals:
             stream = self.stream(signal)
-            output_signals.extend(
-                self.process_stream_signals([signal], group, stream))
+            output_signals = \
+                self.process_stream_signals([signal], group, stream)
         return output_signals
 
     def process_stream_signals(
