@@ -54,8 +54,7 @@ class MergeStreams(Persistence, GroupBy, Block):
                 merged_signals.append(self._merge_signals(group))
         if self.expiration():
             self._schedule_signal_expiration_job(group, input_id)
-        if merged_signals:
-            self.notify_signals(merged_signals)
+        return merged_signals
 
     def _merge_signals(self, group):
         """ Merge signals 1 and 2 and clear from memory if only notify once """
