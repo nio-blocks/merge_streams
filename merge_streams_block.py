@@ -49,26 +49,28 @@ class MergeStreams(Persistence, GroupBy, Block):
         merged_signals = []
         for signal in signals:
             self._signals[group][input_id] = signal
-            if self._signals[group]["input_1"] and \
-                    self._signals[group]["input_2"]:
-                merged_signals.append(self._merge_signals(group))
+            signal1 = self._signals[group]["input_1"]
+            signal2 = self._signals[group]["input_2"]
+            if signal1 and signal2:
+                merged_signals.append(self._merge_signals(signal1, signal2))
         if self.expiration():
             self._schedule_signal_expiration_job(group, input_id)
         if merged_signals:
             self.notify_signals(merged_signals)
 
-    def _merge_signals(self, group):
+    def _merge_signals(self, signal1, signal2):
         """ Merge signals 1 and 2 and clear from memory if only notify once """
-        sig_1_dict = self._signals[group]["input_1"].to_dict()
-        sig_2_dict = self._signals[group]["input_2"].to_dict()
+        sig_1_dict = signal1.to_dict()
+        sig_2_dict = signal2.to_dict()
+
         self._fix_to_dict_hidden_attr_bug(sig_1_dict)
         self._fix_to_dict_hidden_attr_bug(sig_2_dict)
         merged_signal_dict = {}
         merged_signal_dict.update(sig_1_dict)
         merged_signal_dict.update(sig_2_dict)
         if self.notify_once():
-            self._signals[group]["input_1"] = {}
-            self._signals[group]["input_2"] = {}
+            signal1 = {}
+            signal2 = {}
         return Signal(merged_signal_dict)
 
     def _fix_to_dict_hidden_attr_bug(self, signal_dict):
