@@ -1,4 +1,6 @@
 from collections import defaultdict
+from threading import Lock
+
 from nio.block.terminals import input
 from nio.block.base import Block
 from nio.util.discovery import discoverable
@@ -30,6 +32,7 @@ class MergeStreams(Persistence, GroupBy, Block):
     def __init__(self):
         super().__init__()
         self._signals = defaultdict(self._default_signals_dict)
+        self._signals_lock = defaultdict(Lock)
         self._expiration_jobs = defaultdict(self._default_expiration_jobs_dict)
 
     def persisted_values(self):
@@ -47,28 +50,31 @@ class MergeStreams(Persistence, GroupBy, Block):
 
     def process_group_signals(self, signals, group, input_id):
         merged_signals = []
-        for signal in signals:
-            self._signals[group][input_id] = signal
-            if self._signals[group]["input_1"] and \
-                    self._signals[group]["input_2"]:
-                merged_signals.append(self._merge_signals(group))
-        if self.expiration():
-            self._schedule_signal_expiration_job(group, input_id)
-        if merged_signals:
-            self.notify_signals(merged_signals)
+        with self._signals_lock[group]:
+            for signal in signals:
+                self._signals[group][input_id] = signal
+                signal1 = self._signals[group]["input_1"]
+                signal2 = self._signals[group]["input_2"]
+                if signal1 and signal2:
+                    merged_signals.append(self._merge_signals(signal1, signal2))
+            if self.expiration():
+                self._schedule_signal_expiration_job(group, input_id)
 
-    def _merge_signals(self, group):
+        return merged_signals
+
+    def _merge_signals(self, signal1, signal2):
         """ Merge signals 1 and 2 and clear from memory if only notify once """
-        sig_1_dict = self._signals[group]["input_1"].to_dict()
-        sig_2_dict = self._signals[group]["input_2"].to_dict()
+        sig_1_dict = signal1.to_dict()
+        sig_2_dict = signal2.to_dict()
+
         self._fix_to_dict_hidden_attr_bug(sig_1_dict)
         self._fix_to_dict_hidden_attr_bug(sig_2_dict)
         merged_signal_dict = {}
         merged_signal_dict.update(sig_1_dict)
         merged_signal_dict.update(sig_2_dict)
         if self.notify_once():
-            self._signals[group]["input_1"] = {}
-            self._signals[group]["input_2"] = {}
+            signal1 = {}
+            signal2 = {}
         return Signal(merged_signal_dict)
 
     def _fix_to_dict_hidden_attr_bug(self, signal_dict):
