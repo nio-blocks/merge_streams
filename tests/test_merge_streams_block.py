@@ -46,9 +46,7 @@ class TestMergeStreams(NIOBlockTestCase):
         blk = MergeStreams()
         signal_1 = Signal({"A": 1})
         signal_2 = Signal({"A": 2})
-        blk._signals[None]["input_1"] = signal_1
-        blk._signals[None]["input_2"] = signal_2
-        merged_signal = blk._merge_signals(group=None)
+        merged_signal = blk._merge_signals(signal_1, signal_2)
         self.assertDictEqual(merged_signal.to_dict(), signal_2.to_dict())
 
     def test_no_expiration_and_notify_once_is_true(self):
@@ -161,28 +159,16 @@ class TestMergeStreams(NIOBlockTestCase):
 
     def test_persisted_values_with_no_ttl(self):
         """Persist input signals between block restarts"""
-        persistence_module_path = \
-            'nio.block.mixins.persistence.persistence.PersistenceModule'
-        with patch(persistence_module_path) as mock_persistence:
-            blk = MergeStreams()
-            self.configure_block(blk, {})
-            self.assertEqual(
-                mock_persistence().load.call_args[0][0], "_signals")
-            blk.start()
-            blk.stop()
-            self.assertEqual(
-                mock_persistence().store.call_args[0][0], "_signals")
-            self.assertEqual(mock_persistence().save.call_count, 1)
+        blk = MergeStreams()
+        self.configure_block(blk, {})
+        self.assertEqual(blk.persisted_values(), ['_signals'])
+        blk.start()
+        blk.stop()
 
     def test_persisted_values_with_ttl(self):
         """Do no persist input signals when there is an expiration"""
-        persistence_module_path = \
-            'nio.block.mixins.persistence.persistence.PersistenceModule'
-        with patch(persistence_module_path) as mock_persistence:
-            blk = MergeStreams()
-            self.configure_block(blk, {"expiration": {"seconds": 1}})
-            self.assertFalse(mock_persistence().load.call_count)
-            blk.start()
-            blk.stop()
-            self.assertFalse(mock_persistence().store.call_count)
-            self.assertTrue(mock_persistence().save.call_count)
+        blk = MergeStreams()
+        self.configure_block(blk, {"expiration": {"seconds": 1}})
+        self.assertEqual(blk.persisted_values(), [])
+        blk.start()
+        blk.stop()
