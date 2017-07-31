@@ -24,10 +24,10 @@ class MergeStreams(Persistence, GroupBy, Block):
     version = VersionProperty('0.1.0')
 
     def _default_signals_dict(self):
-        return { "input_1": {}, "input_2": {} }
+        return {"input_1": {}, "input_2": {}}
 
     def _default_expiration_jobs_dict(self):
-        return { "input_1": None, "input_2": None }
+        return {"input_1": None, "input_2": None}
 
     def __init__(self):
         super().__init__()
@@ -56,10 +56,13 @@ class MergeStreams(Persistence, GroupBy, Block):
                 signal1 = self._signals[group]["input_1"]
                 signal2 = self._signals[group]["input_2"]
                 if signal1 and signal2:
-                    merged_signals.append(self._merge_signals(signal1, signal2))
+                    merged_signal = self._merge_signals(signal1, signal2)
+                    merged_signals.append(merged_signal)
+                    if self.notify_once():
+                        self._signals[group]["input_1"] = {}
+                        self._signals[group]["input_2"] = {}
             if self.expiration():
                 self._schedule_signal_expiration_job(group, input_id)
-
         return merged_signals
 
     def _merge_signals(self, signal1, signal2):
@@ -72,9 +75,6 @@ class MergeStreams(Persistence, GroupBy, Block):
         merged_signal_dict = {}
         merged_signal_dict.update(sig_1_dict)
         merged_signal_dict.update(sig_2_dict)
-        if self.notify_once():
-            signal1 = {}
-            signal2 = {}
         return Signal(merged_signal_dict)
 
     def _fix_to_dict_hidden_attr_bug(self, signal_dict):
