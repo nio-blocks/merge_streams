@@ -3,7 +3,6 @@ from threading import Lock
 
 from nio.block.terminals import input
 from nio.block.base import Block
-from nio.util.discovery import discoverable
 from nio.signal.base import Signal
 from nio.properties import VersionProperty, TimeDeltaProperty, \
     BoolProperty
@@ -14,7 +13,6 @@ from nio.block.mixins.persistence.persistence import Persistence
 
 @input('input_2')
 @input('input_1', default=True)
-@discoverable
 class MergeStreams(Persistence, GroupBy, Block):
 
     """ Take two input streams and combine signals together. """

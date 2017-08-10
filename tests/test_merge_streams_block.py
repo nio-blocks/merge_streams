@@ -1,9 +1,10 @@
-from collections import defaultdict
 from time import sleep
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
 from nio.block.terminals import DEFAULT_TERMINAL
 from nio.signal.base import Signal
 from nio.testing.block_test_case import NIOBlockTestCase
+
 from ..merge_streams_block import MergeStreams
 
 
