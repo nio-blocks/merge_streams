@@ -1,6 +1,6 @@
 MergeStreams
 ============
-Take two input streams and merge the signals into one.  If the signals have matching attributes (that aren't the group_by property) then the most recent signal's attribute will take priority.
+Take two input streams and merge the signals into one.  If the signals have matching attributes (that aren't the group_by property) then the input_2 signal's attribute will take priority.
 
 Properties
 ----------
