@@ -1,14 +1,14 @@
 MergeStreams
 ============
-Take two input streams and merge the signals into one.  If the signals have matching attributes (that aren't the group_by property) then the input_2 signal's attribute will take priority.
+The MergeStreams block takes signals from *input_1* and *input_2* and emits them as one signal.  If the signals have matching attributes (that aren't the group_by property) then the input_2 signal's attribute will take priority.
 
 Properties
 ----------
-- **backup_interval**: How often to periodically save (backup) the persisted signal and interval.
-- **expiration**: Length of time to store signal before dropping it.
+- **backup_interval**: An interval of time that specifies how often persisted data is saved.
+- **expiration**: Length of time to store an incoming signal and wait for an incoming signal to the other input before dropping the signal.
 - **group_by**: Signals from the two inputs are merged based on matching group attributes.
-- **load_from_persistence**: If the block is stopped, load the block's previous state upon restart.
-- **notify_once**: Remove signal from block after it is notified.
+- **load_from_persistence**: If `True`, the block’s state will be saved when the block is stopped, and reloaded once the block is restarted.
+- **notify_once**: If true (checked), remove a signal from block after it is merged and emitted.
 
 Inputs
 ------
@@ -17,7 +17,7 @@ Inputs
 
 Outputs
 -------
-- **default**: A new signal that is the merged version of one signal from input 1 and one signal from input 2.
+- **default**: A new signal that is the merged version of one signal from input_1 and one signal from input_2.
 
 Commands
 --------

@@ -1,7 +1,7 @@
 {
   "nio/MergeStreams": {
     "version": "0.1.1",
-    "description": "Take two input streams and merge the signals into one.  If the signals have matching attributes (that aren't the group_by property) then the input_2 signal's attribute will take priority.",
+    "description": "The MergeStreams block takes signals from *input_1* and *input_2* and emits them as one signal.  If the signals have matching attributes (that aren't the group_by property) then the input_2 signal's attribute will take priority.",
     "categories": [
       "Signal Modifier"
     ],
@@ -9,7 +9,7 @@
       "backup_interval": {
         "title": "Backup Interval",
         "type": "TimeDeltaType",
-        "description": "How often to periodically save (backup) the persisted signal and interval.",
+        "description": "An interval of time that specifies how often persisted data is saved.",
         "default": {
           "seconds": 3600
         }
@@ -17,7 +17,7 @@
       "expiration": {
         "title": "Stream Expiration",
         "type": "TimeDeltaType",
-        "description": "Length of time to store signal before dropping it.",
+        "description": "Length of time to store an incoming signal and wait for an incoming signal to the other input before dropping the signal.",
         "default": {}
       },
       "group_by": {
@@ -29,13 +29,13 @@
       "load_from_persistence": {
         "title": "Load from Persistence?",
         "type": "BoolType",
-        "description": "If the block is stopped, load the block's previous state upon restart.",
+        "description": "If `True`, the block’s state will be saved when the block is stopped, and reloaded once the block is restarted.",
         "default": true
       },
       "notify_once": {
         "title": "Notify Once?",
         "type": "BoolType",
-        "description": "Remove signal from block after it is notified.",
+        "description": "If true (checked), remove a signal from block after it is merged and emitted.",
         "default": true
       }
     },
@@ -49,13 +49,13 @@
     },
     "outputs": {
       "default": {
-        "description": "A new signal that is the merged version of one signal from input 1 and one signal from input 2."
+        "description": "A new signal that is the merged version of one signal from input_1 and one signal from input_2."
       }
     },
     "commands": {
       "groups": {
-        "description": "Display all the current groupings of the signals.",
-        "params": {}
+        "params": {},
+        "description": "Display all the current groupings of the signals."
       }
     }
   }
