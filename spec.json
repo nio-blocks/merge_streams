@@ -1,6 +1,6 @@
 {
   "nio/MergeStreams": {
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "The MergeStreams block takes signals from *input_1* and *input_2* and emits them as one signal.  If the signals have matching attributes (that aren't the group_by property) then the input_2 signal's attribute will take priority.",
     "categories": [
       "Signal Modifier"
