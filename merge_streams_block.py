@@ -19,7 +19,7 @@ class MergeStreams(Persistence, GroupBy, Block):
 
     expiration = TimeDeltaProperty(default={}, title="Stream Expiration")
     notify_once = BoolProperty(default=True, title="Notify Once?")
-    version = VersionProperty('0.1.0')
+    version = VersionProperty("0.1.1")
 
     def _default_signals_dict(self):
         return {"input_1": {}, "input_2": {}}

@@ -1,6 +1,6 @@
 {
   "nio/MergeStreams": {
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Take two input streams and merge the signals into one.  If the signals have matching attributes (that aren't the group_by property) then the input_2 signal's attribute will take priority.",
     "categories": [
       "Signal Modifier"
