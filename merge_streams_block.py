@@ -50,7 +50,7 @@ class MergeStreams(Persistence, GroupBy, Block):
         merged_signals = []
         with self._signals_lock[group]:
             for signal in signals:
-                self._signals[group][input_id] = signal
+                self._signals[group][input_id] = signal.to_dict()
                 signal1 = self._signals[group]["input_1"]
                 signal2 = self._signals[group]["input_2"]
                 if signal1 and signal2:
@@ -65,14 +65,9 @@ class MergeStreams(Persistence, GroupBy, Block):
 
     def _merge_signals(self, signal1, signal2):
         """ Merge signals 1 and 2 and clear from memory if only notify once """
-        sig_1_dict = signal1.to_dict()
-        sig_2_dict = signal2.to_dict()
-
-        self._fix_to_dict_hidden_attr_bug(sig_1_dict)
-        self._fix_to_dict_hidden_attr_bug(sig_2_dict)
         merged_signal_dict = {}
-        merged_signal_dict.update(sig_1_dict)
-        merged_signal_dict.update(sig_2_dict)
+        merged_signal_dict.update(signal1)
+        merged_signal_dict.update(signal2)
         return Signal(merged_signal_dict)
 
     def _fix_to_dict_hidden_attr_bug(self, signal_dict):

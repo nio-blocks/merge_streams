@@ -25,7 +25,7 @@ class TestMergeStreams(NIOBlockTestCase):
         signal = Signal({"A": "a"})
         blk.process_signals([signal], input_id='input_1')
         blk.stop()
-        self.assertEqual(blk._signals[None]["input_1"], signal)
+        self.assertDictEqual(blk._signals[None]["input_1"], signal.to_dict())
 
     def test_group_by(self):
         blk = MergeStreams()
@@ -45,10 +45,10 @@ class TestMergeStreams(NIOBlockTestCase):
     def test_merge_signals_with_duplicate_attributes(self):
         """ input_2 attributes override input_1 attributes """
         blk = MergeStreams()
-        signal_1 = Signal({"A": 1})
-        signal_2 = Signal({"A": 2})
+        signal_1 = {"A": 1}
+        signal_2 = {"A": 2}
         merged_signal = blk._merge_signals(signal_1, signal_2)
-        self.assertDictEqual(merged_signal.to_dict(), signal_2.to_dict())
+        self.assertDictEqual(merged_signal.to_dict(), signal_2)
 
     def test_no_expiration_and_notify_once_is_true(self):
         blk = MergeStreams()
