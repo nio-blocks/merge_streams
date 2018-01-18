@@ -45,8 +45,8 @@ class TestMergeStreams(NIOBlockTestCase):
     def test_merge_signals_with_duplicate_attributes(self):
         """ input_2 attributes override input_1 attributes """
         blk = MergeStreams()
-        signal_1 = ({"A": 1})
-        signal_2 = ({"A": 2})
+        signal_1 = {"A": 1}
+        signal_2 = {"A": 2}
         merged_signal = blk._merge_signals(signal_1, signal_2)
         self.assertDictEqual(merged_signal.to_dict(), signal_2)
 
