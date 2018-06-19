@@ -21,7 +21,7 @@ class MergeStreams(Persistence, GroupBy, Block):
                                    advanced=True, order=0)
     notify_once = BoolProperty(default=True, title="Notify Once?",
                                advanced=True, order=1)
-    version = VersionProperty("0.1.2")
+    version = VersionProperty("0.2.0")
 
     def _default_signals_dict(self):
         return {"input_1": {}, "input_2": {}}
