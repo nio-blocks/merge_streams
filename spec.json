@@ -5,58 +5,8 @@
     "categories": [
       "Signal Modifier"
     ],
-    "properties": {
-      "backup_interval": {
-        "title": "Backup Interval",
-        "type": "TimeDeltaType",
-        "description": "An interval of time that specifies how often persisted data is saved.",
-        "default": {
-          "seconds": 3600
-        }
-      },
-      "expiration": {
-        "title": "Stream Expiration",
-        "type": "TimeDeltaType",
-        "description": "Length of time to store an incoming signal and wait for an incoming signal to the other input before dropping the signal.",
-        "default": {}
-      },
-      "group_by": {
-        "title": "Group By",
-        "type": "Type",
-        "description": "Signals from the two inputs are merged based on matching group attributes.",
-        "default": null
-      },
-      "load_from_persistence": {
-        "title": "Load from Persistence?",
-        "type": "BoolType",
-        "description": "If `True`, the block’s state will be saved when the block is stopped, and reloaded once the block is restarted.",
-        "default": true
-      },
-      "notify_once": {
-        "title": "Notify Once?",
-        "type": "BoolType",
-        "description": "If true (checked), remove a signal from block after it is merged and emitted.",
-        "default": true
-      }
-    },
-    "inputs": {
-      "input_1": {
-        "description": "Any list of signals."
-      },
-      "input_2": {
-        "description": "Any list of signals."
-      }
-    },
-    "outputs": {
-      "default": {
-        "description": "A new signal that is the merged version of one signal from input_1 and one signal from input_2."
-      }
-    },
-    "commands": {
-      "groups": {
-        "params": {},
-        "description": "Display all the current groupings of the signals."
-      }
-    }
+    "tags": "combine two getter setter merge join sources stream streams",
+    "from_readme": "docs/merge_streams.md",
+    "from_python": "merge_streams.MergeStreams"
   }
 }
