@@ -5,8 +5,8 @@
     "categories": [
       "Signal Modifier"
     ],
-    "tags": "combine two getter setter merge join sources stream streams",
+    "tags": "combine two getter setter merge join sources stream streams inputs multiple",
     "from_readme": "docs/merge_streams.md",
-    "from_python": "merge_streams.MergeStreams"
+    "from_python": "merge_streams_block.MergeStreams"
   }
 }
