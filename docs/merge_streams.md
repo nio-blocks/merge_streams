@@ -30,7 +30,7 @@ Examples
 With the default configuration, the block needs a signal to be processed by each input, and then it will emit a single signal that contains the attributes of both input signals. Because **notify Once** is checked (True), until a new signal is received by both inputs no signals will be emitted. The last signal received is stored internally until the **Stream Expiration**, if applicable.
  ```
 {"letters": "A"}         {"numbers": 0}
-  none                   {"numbers": 1}
+  none                    {"numbers": 1}
 {"letters": "B"}           none
 {"letters": "C"}           none
   ...                      ...
@@ -47,14 +47,14 @@ With the default configuration, the block needs a signal to be processed by each
                    V
       {"letters": "A", "numbers": 0}
        none
-     {"letters": "B", "numbers": 1}
+      {"letters": "B", "numbers": 1}
        none
        ...
 ```
 In the case that both input signals have a common attribute, the value from _input_2_ will overwrite the value from _input_1_. By Setting **Notify Once** False (unchecked), every signal received at either input will have the last signal received by the *other* input merged into it. See also: [_AppendState_](https://blocks.n.io/AppendState)
  ```
 {"letters": "A"}         {"numbers": 0}
-  none                   {"numbers": 1}
+  none                    {"numbers": 1}
 {"letters": "B"}           none
 {"letters": "C"}           none
   ...                      ...
