@@ -1,6 +1,7 @@
 {
   "nio/MergeStreams": {
     "language": "Python",
+    "from_python": "merge_streams_block.MergeStreams",
     "url": "git://github.com/nio-blocks/merge_streams.git",
     "version": "0.2.0"
   }
